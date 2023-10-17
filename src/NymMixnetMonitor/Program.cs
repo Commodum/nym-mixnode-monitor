@@ -5,6 +5,7 @@ using NymMixnetMonitor.MixnodeFacade;
 using Prometheus;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Configuration.AddEnvironmentVariables();
 
 builder.Services.AddHttpClient<INymApiService, NymApiService>(client =>
     {
