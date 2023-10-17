@@ -5,12 +5,19 @@ This container calls the Mixnode api and the Nym API to update key telemetry and
 
 ## Run locally
 Run locally in an interactive session whist exposing the metrics at http://localhost:9090/metrics
+### From local build
 ```
 git pull https://github.com/Commodum/nym-mixnode-monitor.git
 cd nym-mixnode-nym-mixnode-monitor
 docker build NymMixnetMonitor/ --tag=nym-mixnode-monitor:dev
 docker run -it --rm -p 9090:80  -e MixnodeId=5 -e MixnodeIp=185.229.90.217 --log-driver local --log-opt max-size=10m nym-mixnode-monitor:dev
 ```
+### From Github package
+```
+docker pull ghcr.io/commodum/nym-mixnode-monitor:latest
+docker run -it --rm -p 9090:80  -e MixnodeId=5 -e MixnodeIp=185.229.90.217 --log-driver local --log-opt max-size=10m ghcr.io/commodum/nym-mixnode-monitor:latest
+```
+
 ### Notes
 | param | Description |
 | --- | --- |
