@@ -11,6 +11,6 @@
     {
         public int mix_id { get; set; }
         public int avg_uptime { get; set; }
-        public NodePerformance? node_performance { get; set; }
+        public NodePerformance node_performance { get; set; }
     }
 }
