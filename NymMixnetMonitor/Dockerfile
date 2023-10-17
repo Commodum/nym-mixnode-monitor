@@ -2,7 +2,7 @@
 
 FROM mcr.microsoft.com/dotnet/aspnet:6.0 AS base
 WORKDIR /app
-EXPOSE 9090
+EXPOSE 80 8080
 
 FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
 WORKDIR /src
@@ -16,7 +16,6 @@ FROM build AS publish
 RUN dotnet publish "NymMixnetMonitor.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
 FROM base AS final
-EXPOSE 8080
 WORKDIR /app
 COPY --from=publish /app/publish .
 ENTRYPOINT ["dotnet", "NymMixnetMonitor.dll"]

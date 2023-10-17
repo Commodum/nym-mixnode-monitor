@@ -4,11 +4,14 @@ namespace NymMixnetMonitor.NymApi
 {
     public class NymApiService : INymApiService
     {
+        private readonly ILogger<NymApiService> _logger;
         private readonly HttpClient _httpClient;
 
-        public NymApiService(HttpClient httpClient)
+        public NymApiService(ILogger<NymApiService> logger, HttpClient httpClient)
         {
+            _logger = logger;
             _httpClient = httpClient;
+            _logger.LogInformation($"Using {_httpClient.BaseAddress.AbsoluteUri} as the base uri for the Nym API");
         }
 
         public async Task<IEnumerable<Node>> GetAllMixnodes(CancellationToken cancel)

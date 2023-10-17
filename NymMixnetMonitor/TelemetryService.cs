@@ -5,6 +5,7 @@ using Prometheus;
 using System;
 using System.Diagnostics;
 using System.Net.Http;
+using System.Text.Json;
 
 namespace NymMixnetMonitor
 {
@@ -13,6 +14,7 @@ namespace NymMixnetMonitor
     /// </summary>
     public sealed class TelemetryService : BackgroundService
     {
+        private readonly ILogger<TelemetryService> _logger;
         private readonly INymApiService _nymApiService;
         private readonly IMixnodeApiService _mixnodeService;
         private readonly int _mixnodeId;
@@ -36,14 +38,21 @@ namespace NymMixnetMonitor
         private static readonly Gauge StakeSaturation = Metrics.CreateGauge($"{_telemetryPrefix}stake_saturation", "Current stake saturation");
         private static readonly Gauge StakeSaturationUncapped = Metrics.CreateGauge($"{_telemetryPrefix}stake_saturation_uncapped", "Current uncapped stake saturation");
 
-        public TelemetryService(INymApiService nymApiService, IMixnodeApiService mixnodeService, int mixNodeId)
+        public TelemetryService(ILogger<TelemetryService> logger, INymApiService nymApiService, IMixnodeApiService mixnodeService, int mixNodeId)
         {
+            _logger = logger;
             _nymApiService = nymApiService;
             _mixnodeService = mixnodeService;
             _mixnodeId = mixNodeId;
-            Console.WriteLine($"Obtaining meta data for mixnode: {_mixnodeId}");
+            _logger.LogInformation($"Obtaining meta data for mixnode {_mixnodeId}");
             _mixnode = _nymApiService.GetMixnode(_mixnodeId, new CancellationToken()).Result;
-            Console.WriteLine($"Mixnode IP: {_mixnode.bond_information.mix_node.host}");
+
+            if (_mixnode == null)
+            {
+                var ex = new Exception("The mixnode Id is not valid. Has the MixnodeId app setting/environment variable be correctly set?");
+                _logger.LogError(ex, "Invalid MixnodeId");
+                throw ex;
+            }
         }
 
         protected override async Task ExecuteAsync(CancellationToken cancel)
@@ -54,15 +63,17 @@ namespace NymMixnetMonitor
                 {
                     try
                     {
+                        _logger.LogTrace("Starting Telemetry Update");
                         await UpdateStatsTelemetry(cancel);
                         await UpdateAvgUptimeTelemetry(cancel);
                         await UpdateStatusTelemetry(cancel);
                         await UpdateStakeSaturationTelemetry(cancel);
                         IterationCount.Inc(1);
+                        _logger.LogTrace("Completed Telemetry Update");
                     }
                     catch(Exception ex)
                     {
-                        Console.WriteLine(ex);
+                        _logger.LogError(ex,"An error occured within the TelemetyService"); 
                     }
 
                     await Task.Delay(TimeSpan.FromSeconds(generalDelayInSeconds), cancel);
@@ -84,7 +95,7 @@ namespace NymMixnetMonitor
             PacketsReceivedSinceLastUpdate.Set(double.Parse(stats.packets_sent_since_last_update.ToString()));
             PacketsSentSinceLastUpdate.Set(double.Parse(stats.packets_sent_since_last_update.ToString()));
             PacketsExplicitlyDroppedSinceLastUpdate.Set(double.Parse(stats.packets_explicitly_dropped_since_last_update.ToString()));
-            Console.WriteLine($"{stats.update_time}, {stats.packets_received_since_startup}");
+            _logger.LogTrace(JsonSerializer.Serialize(stats));
         }
 
         private async Task UpdateAvgUptimeTelemetry(CancellationToken cancel)
@@ -94,6 +105,7 @@ namespace NymMixnetMonitor
             PerformanceMostRecent.Set(double.Parse(avgUptime.node_performance.most_recent.ToString()));
             PerformanceLastHour.Set(double.Parse(avgUptime.node_performance.last_hour.ToString()));
             PerformanceLast24Hours.Set(double.Parse(avgUptime.node_performance.last_24h.ToString()));
+            _logger.LogTrace(JsonSerializer.Serialize(avgUptime));
         }
 
         private async Task UpdateStatusTelemetry(CancellationToken cancel)
@@ -102,6 +114,7 @@ namespace NymMixnetMonitor
             var statusAsInt = 0;
             if (status.status == "active") { statusAsInt = 1; }
             Status.Set(statusAsInt);
+            _logger.LogTrace(JsonSerializer.Serialize(status));
         }
 
         private async Task UpdateStakeSaturationTelemetry(CancellationToken cancel)
@@ -109,6 +122,7 @@ namespace NymMixnetMonitor
             var stakeSaturation = await _nymApiService.GetStakeSaturation(_mixnodeId, cancel);
             StakeSaturation.Set(double.Parse(stakeSaturation.saturation.ToString()));
             StakeSaturationUncapped.Set(double.Parse(stakeSaturation.uncapped_saturation.ToString()));
+            _logger.LogTrace(JsonSerializer.Serialize(stakeSaturation));
         }
     }
 }

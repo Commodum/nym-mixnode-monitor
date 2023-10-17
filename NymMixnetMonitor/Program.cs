@@ -5,7 +5,6 @@ using NymMixnetMonitor.MixnodeFacade;
 using Prometheus;
 
 var builder = WebApplication.CreateBuilder(args);
-builder.Configuration.AddEnvironmentVariables();
 
 builder.Services.AddHttpClient<INymApiService, NymApiService>(client =>
     {
@@ -19,6 +18,7 @@ builder.Services.AddHttpClient<IMixnodeApiService, MixnodeApiService>(client =>
 
 // configure woker service
 builder.Services.AddHostedService<TelemetryService>(serviceProvider => new TelemetryService(
+    logger: serviceProvider.GetRequiredService<ILogger<TelemetryService>>(),
     nymApiService: serviceProvider.GetRequiredService<INymApiService>(),
     mixnodeService: serviceProvider.GetRequiredService<IMixnodeApiService>(),
     mixNodeId: int.Parse(builder.Configuration["MixnodeId"]))

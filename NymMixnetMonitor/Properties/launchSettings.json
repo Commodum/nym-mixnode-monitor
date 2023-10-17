@@ -23,7 +23,7 @@
       "launchBrowser": true,
       "launchUrl": "{Scheme}://{ServiceHost}:{ServicePort}/metrics",
       "environmentVariables": {
-        "ASPNETCORE_URLS": "http://+:9090"
+        "ASPNETCORE_URLS": "http://+:80"
       },
       "publishAllPorts": true,
       "useSSL": false
