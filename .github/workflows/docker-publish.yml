@@ -3,7 +3,6 @@ name: Create and publish a Docker image
 # Configures this workflow to run every time a change is pushed to the branch called `release`.
 on:
   push:
-    branches: ['main']
     tags: ['v*']
 
 env:
@@ -40,5 +39,5 @@ jobs:
         with:
           context: "{{defaultContext}}:NymMixnetMonitor"
           push: true
-          tags: ${{ steps.meta.outputs.tags }} latest
+          tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
