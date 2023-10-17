@@ -22,7 +22,7 @@ docker run -it --rm -p 9090:80  -e MixnodeId=5 -e MixnodeIp=185.229.90.217 --log
 | --log-opt max-size | limit the size of the log files |
 
 ## Run container as systemd service
-An example service file is located [here](nym-mixnet-monitor.service).
+An example service file is located [here](nym-mixnode-monitor.service).
 This service pulls the latest instance of the nym-mixnode-monitor package, runs it and exposes the metrics on port 9090.  This file should be customised to override the ```MixnodeId``` and ```MixnodeIp``` environmental variables to the mixnodeId and IP address of your mixnode instance.  Please note that localhost or 127.0.0.1 cannot be used for the MixnodeIp.
 
 ### Environment Variables that can be configured within the .service file
