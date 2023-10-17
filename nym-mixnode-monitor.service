@@ -1,0 +1,31 @@
+# create in: /etc/systemd/system/nym-mixnode-monitor.service
+# reload systemctl daemon...
+# systemctl daemon-reload
+# systemctl enable nym-mixnode-monitor
+# Ensure that the Docker engine is installed https://docs.docker.com/engine/install/ubuntu/
+# test: http://localhost:9090/metrics
+
+[Unit]
+Description=nym-mixnode-monitor Service
+After=docker.service
+Requires=docker.service
+
+[Service]
+TimeoutStartSec=0
+Restart=always
+RestartSec=1
+ExecStartPre=-/usr/bin/docker exec %n stop
+ExecStartPre=-/usr/bin/docker rm %n
+ExecStartPre=/usr/bin/docker pull ghcr.io/commodum/nym-mixnode-monitor:latest
+ExecStart=/usr/bin/docker run --rm --name %n \
+--log-driver local \
+--log-opt max-size=10m \
+-p 9090:80 \
+--stop-timeout 10 \
+-e MixnodeId=292  \
+-e MixnodeIp=5.161.43.60 \
+ghcr.io/commodum/nym-mixnode-monitor:latest
+ExecStop=/usr/bin/docker exec %n stop
+
+[Install]
+WantedBy=default.target
